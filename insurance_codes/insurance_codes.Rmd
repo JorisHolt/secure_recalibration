@@ -1,0 +1,127 @@
+---
+title: "Definitions of endpoints using insurance codes"
+author: "Joris Holtrop"
+date: "`r format(Sys.Date(), '%Y-%B-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: false
+    theme: readable
+    self_contained: true
+  github_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(readxl)
+library(knitr)
+```
+
+## Introduction
+
+This file describes the Dutch insurance codes used for defining the endpoints for the recalibration of the SMART2 risk score to the UMCU outpatient clinic data. These insurance codes were selected from all available codes and attempt to approximate the ICD-10 code definitions for the endpoint of the SMART2 risk model, as it was used in the original model development.
+
+Insurance codes do not directly cover ICD-10 codes as they don't necessarily refer to diagnoses but reflect the (cost of) care provided. The insurance codes are categorized by the insurer as being part of a particular ICD group, sometimes these are specific (e.g., I20), and sometimes they cover broader ranges (e.g., I01-I99). In the case where the particular ICD group to which insurance codes belonged were specific enough (e.g., I23 for myocardial infarction) and the group did not include codes not included in or explicitly excluded from the endpoint the insurance code was selected on the basis of the ICD group it belonged to. In cases where the ICD range was broader than the endpoint definition of SMART2 codes were assessed individually regarding whether they belonged to the endpoint definition or not.
+
+SMART2 endpoint ICD-10 codes
+
+| Category | Endpoint Description | ICD-10 Codes |
+|--------------------|------------------------------------|-----------------|
+| **Fatal CV Disease** | Hypertensive disease | I10–I16 |
+|  | Ischaemic heart disease | I20–I25 |
+|  | Arrhythmias, heart failure | I46–I52 |
+|  | Cerebrovascular disease | I60–I69 |
+|  | Atherosclerosis / AAA | I70–I73 |
+|  | Sudden death / death \< 24h symptom onset | R96.0–R96.1 |
+| *Excluded (Fatal)* | Myocarditis, unspecified | I51.4 |
+|  | Subarachnoid haemorrhage | I60 |
+|  | Subdural haemorrhage | I62 |
+|  | Cerebral aneurysm | I67.1 |
+|  | Cerebral arteritis | I68.2 |
+|  | Moyamoya | I67.5 |
+| **Non-Fatal Events** | Non-fatal myocardial infarction | I21–I23 |
+|  | Non-fatal stroke | I60–I69 |
+| *Excluded (Non-Fatal)* | Subarachnoid haemorrhage | I60 |
+|  | Subdural haemorrhage | I62 |
+|  | Cerebral aneurysm | I67.1 |
+|  | Cerebral arteritis | I68.2 |
+|  | Moyamoya | I67.5 |
+
+**Abbreviations:** CV = cardiovascular; AAA = aortic abdominal aneurysm; ICD = International Classification of Diseases
+
+Two scenario's were assessed:
+
+1.   A scenario where the endpoint consisted only of insurance codes which reflected the endpoint with high certainty with low probability of contamination
+
+2.  A scenario with an expanded endpoint, including all the codes of scenario 1, together with less specific codes. These less specific codes were considered to be reflective of and endpoint if they co-occured with certain procedural codes that that increased the probability of a true endpoint. Similarly, if a procedural code indicated a procedure that decreased the probability the admission was discarded still (e.g., admission with neurological symptoms where a burr hole drainage was performed; decreasing the probability of stroke as an endpoint).
+
+## Contents
+
+-   [1. Codes for fatal endpoints](#codes-for-fatal-endpoints)
+-   [2. Codes for non-fatal endpoints](#codes-for-non-fatal-endpoints)
+-   [3. Codes for potential non-fatal endpoints](#codes-for-potential-non-fatal-endpoints)
+-   [4. Auxiliary procedural codes for potential non-fatal endpoints](#auxiliary-procedural-codes-for-potential-non-fatal-endpoints)
+
+# Scenario 1: Codes for fatal endpoints
+
+Causes of death are not registered in the insurance claim data. As such inferences had to be made for the causes of death, where if an ICD-10/insurance code that indicated CV disease was registered in the year prior to death it was coded as CV death. This larger window is meant to account for patients whose life expectency may be limited thus decreasing the probability of a new diagnostic code being registered in the month or months prior to their death. Various windows were attempted for capturing, including 31 days, 93 days and 1 year. Where the proporition of CV death as part of all deaths reflected the proprotion in the UCC-SMART cohort best at 1 year.
+
+The following codes were considered to have a high probability of reflecting CV death. Mind all translations are preformed by automatic software translation and not by the authors themselves. As such residual Dutch or erroneous translations may occur.
+
+```{r}
+definitely_fatal <- readxl::read_xlsx("H:/ZZ - Secure-E-Health/Tabellen/definitely_fatal.xlsx")
+
+definitely_fatal %>%
+  dplyr::select(zorgproductcode, zorgproductoms_en) %>%
+  rename(`Insurance Code` = zorgproductcode,
+         `Description` = zorgproductoms_en) %>%
+  kable(caption = "Insurance codes that definitely indicate fatal cardiovascular events")
+```
+
+# Scenario 1: Codes for non-fatal endpoints
+
+The following codes were considered to reflect the non fatal events for SMART2 Mind all translations are preformed by automatic software translation and not by the authors themselves. As such residual Dutch or erroneous translations may occur.
+
+```{r}
+definitely_non_fatal <- readxl::read_xlsx("H:/ZZ - Secure-E-Health/Tabellen/definitely_non_fatal.xlsx")
+
+definitely_non_fatal %>%
+  select(zorgproductcode, zorgproductoms_en) %>%
+  rename(`Insurance Code` = zorgproductcode,
+         `Description` = zorgproductoms_en) %>%
+  kable(caption = "Insurance codes that definitely indicate non-fatal cardiovascular events")
+```
+
+# Scenario 2: Codes for potential non-fatal endpoints
+
+The following codes were considered to potentially capture the SMART2 endpoint, if they co-occured with a procedure (see below) Mind all translations are preformed by automatic software translation and not by the authors themselves. As such residual Dutch or erroneous translations may occur.
+
+```{r}
+potential_non_fatal <- readxl::read_xlsx("H:/ZZ - Secure-E-Health/Tabellen/potential_non_fatal.xlsx")
+
+potential_non_fatal %>%
+  rename(`Insurance Code` = zorgproductcode,
+         `Description` = zorgproductoms_en) %>%
+  kable(caption = "Insurance codes that potentially indicate non-fatal cardiovascular events")
+```
+
+# Scenario 2: Auxiliary procedural codes for potential non-fatal endpoints
+
+Mind all translations are preformed by automatic software translation and not by the authors themselves. As such residual Dutch or erroneous translations may occur.
+
+```{r}
+procedure_codes_translated <- readxl::read_xlsx("H:/ZZ - Secure-E-Health/Tabellen/procedure_codes_translated.xlsx")
+
+procedure_non_fatal <- procedure_codes_translated %>%
+  select(Zorgactiviteitcode, Omschrijving_en) %>% 
+  rename(`Procedure Code` = Zorgactiviteitcode, 
+         `Description` = Omschrijving_en)
+
+procedure_non_fatal %>%
+  kable(caption = "Procedure codes that convert potential non-fatal events to definite non-fatal events")
+```
+
+------------------------------------------------------------------------
