@@ -5,10 +5,16 @@ The manuscript describes how the SMART2 risk score for the estimation of 10-year
 ## 📂 Repository Structure
 
 ```
-reestimatingSMART2/
-├── reestimatingSMART2.Rmd       # RMarkdown guide illustrating re-estimation of SMART2 risk
+secure_recalibration/
+├── baseline/                   # Folder containing the information on definition of baseline CV disease presence
+│   └── baseline_presence.html
+│   └── baseline_presence.pdf
+├── insurance_codes/            # Folder containing the information on codes used for ascertainment of outcomes using insurance codes
+│   └── insurance_codes.html
+│   └── insurance_codes.pdf
 ├── docs/
-│   └── reestimatingSMART2.html  # HTML rendering of the RMarkdown for viewing in browser
+│   └── baseline_presence.html  # HTML rendering of the RMarkdown file describing the codes used for baseline presence of CV disease
+│   └── insurance_codes.html    # HTML rendering of the RMarkdown file describin the insurance codes used for outcome ascertainment
 └── README.md                    # This file
 ```
 
